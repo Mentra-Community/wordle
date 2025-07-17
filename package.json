@@ -1,5 +1,5 @@
 {
-  "name": "mentraos-cloud-example-app",
+  "name": "bmp-example-app",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@mentra/sdk": "file:../MentraOS/augmentos_cloud/packages/sdk",
+    "@mentra/sdk": "file:../augmentos_cloud/packages/sdk",
     "express": "^4.21.2",
     "ws": "^8.18.1"
   },
@@ -19,6 +19,8 @@
     "typescript": "^5.0.0",
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.14",
-    "@types/ws": "^8.18.0"
-  }
+    "@types/ws": "^8.18.0",
+    "@types/bun": "latest"
+  },
+  "private": true
 }
