@@ -35,13 +35,11 @@ class BitmapAnimationDemo extends AppServer {
     console.log(`Session started for user: ${userId}, sessionId: ${sessionId}`);
 
     try {
-      console.log(`📋 Running complete demo sequence...`);
 
-      const frameHex = await BitmapUtils.loadBmpFromFileAsHex(
+      const frameBase64 = await BitmapUtils.loadBmpFromFileAsBase64(
         "./assets/bitmap-test2.bmp"
       );
-      const validation = BitmapUtils.validateBmpHex(frameHex);
-
+      const validation = BitmapUtils.validateBmpBase64(frameBase64);
       if (!validation.isValid) {
         console.error(
           `❌ Frame validation failed: ${validation.errors.join(", ")}`
@@ -49,8 +47,8 @@ class BitmapAnimationDemo extends AppServer {
         session.layouts.showTextWall("❌ Error: Invalid bitmap data");
         return;
       }
-
-      session.layouts.showBitmapView(frameHex, { view: ViewType.MAIN });
+      
+      session.layouts.showBitmapView(frameBase64, { view: ViewType.MAIN });
     } catch (error) {
       console.error("Demo error:", error);
     }
