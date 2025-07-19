@@ -65,3 +65,4 @@ class BitmapAnimationDemo extends AppServer {
 // Start the MentraOS Bitmap Animation Demo
 const app = new BitmapAnimationDemo();
 app.start().catch(console.error);
+console.log(`🚀 Bitmap Animation Demo running on port ${PORT} with package ${PACKAGE_NAME}`);
