@@ -35,20 +35,9 @@ class BitmapAnimationDemo extends AppServer {
     console.log(`Session started for user: ${userId}, sessionId: ${sessionId}`);
 
     try {
+      const frame = await BitmapUtils.fileToBase64("./assets/bitmap-test2.bmp");
 
-      const frameBase64 = await BitmapUtils.loadBmpFromFileAsBase64(
-        "./assets/bitmap-test2.bmp"
-      );
-      const validation = BitmapUtils.validateBmpBase64(frameBase64);
-      if (!validation.isValid) {
-        console.error(
-          `❌ Frame validation failed: ${validation.errors.join(", ")}`
-        );
-        session.layouts.showTextWall("❌ Error: Invalid bitmap data");
-        return;
-      }
-      
-      session.layouts.showBitmapView(frameBase64, { view: ViewType.MAIN });
+      session.layouts.showBitmapView(frame, { view: ViewType.MAIN });
     } catch (error) {
       console.error("Demo error:", error);
     }
@@ -75,4 +64,3 @@ class BitmapAnimationDemo extends AppServer {
 // Start the MentraOS Bitmap Animation Demo
 const app = new BitmapAnimationDemo();
 app.start().catch(console.error);
-
