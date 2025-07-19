@@ -34,6 +34,7 @@ class BitmapAnimationDemo extends AppServer {
   ): Promise<void> {
     console.log(`Session started for user: ${userId}, sessionId: ${sessionId}`);
 
+    
     try {
       const frame = await BitmapUtils.fileToBase64("./assets/bitmap-test2.bmp");
 
