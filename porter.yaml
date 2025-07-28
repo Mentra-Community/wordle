@@ -8,7 +8,7 @@ build:
   dockerfile: ./Dockerfile
 
 services:
-- name: bmp-test
+- name: wordle
   type: web
   run: bun run start
   port: 80

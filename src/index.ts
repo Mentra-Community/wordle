@@ -9,6 +9,7 @@ import { getRandomWord, isValidWord } from './words';
 import { create1BitBMP, createCanvas, drawRect } from './bitmap';
 import { drawText, getTextWidth } from './font';
 
+
 const PACKAGE_NAME =
   process.env.PACKAGE_NAME ??
   (() => {
