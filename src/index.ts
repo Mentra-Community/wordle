@@ -48,6 +48,7 @@ interface WordleGame {
   state: GameState;
   maxGuesses: number;
   keyboardState: Map<string, LetterState>;
+  previousGuesses: Set<string>;
 }
 
 class WordleManager {
@@ -61,7 +62,8 @@ class WordleManager {
       currentRow: 0,
       state: GameState.PLAYING,
       maxGuesses: 6,
-      keyboardState: new Map()
+      keyboardState: new Map(),
+      previousGuesses: new Set()
     };
     
     // Initialize empty guesses
@@ -104,11 +106,26 @@ class WordleManager {
       return false;
     }
 
-    // Extract 5-letter word from input
+    // Extract 5-letter word from input - take the LAST valid word
     const words = normalizedInput.split(' ');
-    const fiveLetterWord = words.find(word => word.length === 5 && /^[A-Z]+$/.test(word));
+    let fiveLetterWord: string | undefined;
+    
+    // Iterate through all words to find the last valid 5-letter word
+    for (const word of words) {
+      // Remove trailing punctuation (periods, commas, exclamation marks, question marks)
+      const cleanWord = word.replace(/[.,!?]+$/, '');
+      if (cleanWord.length === 5 && /^[A-Z]+$/.test(cleanWord)) {
+        fiveLetterWord = cleanWord;
+        // Don't break - continue to find the last one
+      }
+    }
     
     if (fiveLetterWord && isValidWord(fiveLetterWord)) {
+      // Check if word has already been guessed
+      if (game!.previousGuesses.has(fiveLetterWord)) {
+        console.log(`Word "${fiveLetterWord}" has already been guessed`);
+        return false;
+      }
       // Submit the guess
       this.submitGuess(game!, fiveLetterWord);
       stateChanged = true;
@@ -118,6 +135,9 @@ class WordleManager {
   }
 
   private submitGuess(game: WordleGame, guess: string): void {
+    // Add to previous guesses
+    game.previousGuesses.add(guess);
+    
     // Check each letter
     const targetLetters = game.targetWord.split('');
     const guessLetters = guess.split('');
@@ -187,15 +207,19 @@ class WordleManager {
   }
 
   private drawWordleGrid(canvas: boolean[][], game: WordleGame): void {
-    const startX = 10;
+    const cellSize = 18;
+    const cellSpacing = 3;
     const startY = 10;
-    const cellSize = 12;
-    const cellSpacing = 2;
     
     for (let row = 0; row < game.maxGuesses; row++) {
+      // First 3 rows on the left, last 3 rows on the right
+      const isLeftSide = row < 3;
+      const startX = isLeftSide ? 10 : 125;
+      const adjustedRow = isLeftSide ? row : row - 3;
+      
       for (let col = 0; col < 5; col++) {
         const x = startX + col * (cellSize + cellSpacing);
-        const y = startY + row * (cellSize + cellSpacing);
+        const y = startY + adjustedRow * (cellSize + cellSpacing);
         
         const guess = game.guesses[row]?.[col];
         if (!guess) continue;
@@ -205,12 +229,12 @@ class WordleManager {
           drawRect(canvas, x, y, cellSize, cellSize, true, true);
           // Draw letter in black on white
           if (guess.letter) {
-            drawText(canvas, guess.letter, x + 3, y + 3, 1);
+            drawText(canvas, guess.letter, x + 4, y + 4, 2);
             // Invert the letter pixels
-            for (let dy = 0; dy < 7; dy++) {
-              for (let dx = 0; dx < 5; dx++) {
-                const px = x + 3 + dx;
-                const py = y + 3 + dy;
+            for (let dy = 0; dy < 14; dy++) {
+              for (let dx = 0; dx < 10; dx++) {
+                const px = x + 4 + dx;
+                const py = y + 4 + dy;
                 if (py < canvas.length && px < canvas[0]!.length && canvas[py] && canvas[py][px] !== undefined) {
                   canvas[py][px] = !canvas[py][px];
                 }
@@ -222,13 +246,13 @@ class WordleManager {
           drawRect(canvas, x, y, cellSize, cellSize, false, true);
           drawRect(canvas, x+1, y+1, cellSize-2, cellSize-2, false, true);
           if (guess.letter) {
-            drawText(canvas, guess.letter, x + 3, y + 3, 1);
+            drawText(canvas, guess.letter, x + 4, y + 4, 2);
           }
         } else {
           // Draw normal border
           drawRect(canvas, x, y, cellSize, cellSize, false, true);
           if (guess.letter) {
-            drawText(canvas, guess.letter, x + 3, y + 3, 1);
+            drawText(canvas, guess.letter, x + 4, y + 4, 2);
           }
         }
       }
@@ -236,12 +260,12 @@ class WordleManager {
   }
 
   private drawKeyboardHints(canvas: boolean[][], game: WordleGame): void {
-    const startX = 100;
+    const startX = 240;
     const startY = 10;
     
-    drawText(canvas, 'LETTERS:', startX, startY, 1);
+    drawText(canvas, 'LETTERS:', startX, startY, 2);
     
-    let y = startY + 10;
+    let y = startY + 18;
     let x = startX;
     
     // Group letters by state
@@ -257,27 +281,28 @@ class WordleManager {
     
     // Draw correct letters (filled)
     if (correct.length > 0) {
-      drawText(canvas, 'RIGHT:', x, y, 1);
-      drawText(canvas, correct.sort().join(' '), x + 40, y, 1);
-      y += 10;
+      drawText(canvas, 'COR', x, y, 2);
+      drawText(canvas, correct.sort().join(' '), x + 50, y, 2);
+      y += 18;
     }
     
     // Draw present letters
     if (present.length > 0) {
-      drawText(canvas, 'WRONG POS:', x, y, 1);
-      drawText(canvas, present.sort().join(' '), x + 60, y, 1);
-      y += 10;
+      drawText(canvas, 'POS', x, y, 2);
+      drawText(canvas, present.sort().join(' '), x + 50, y, 2);
+      y += 18;
     }
     
     // Draw absent letters
     if (absent.length > 0) {
-      drawText(canvas, 'NOT IN:', x, y, 1);
+      drawText(canvas, 'WRG', x, y, 2);
       const absentText = absent.sort().join(' ');
       // Split into multiple lines if too long
-      const maxCharsPerLine = 20;
+      const maxCharsPerLine = 15;
+      let lineY = y;
       for (let i = 0; i < absentText.length; i += maxCharsPerLine) {
-        drawText(canvas, absentText.substring(i, i + maxCharsPerLine), x + 45, y, 1);
-        y += 8;
+        drawText(canvas, absentText.substring(i, i + maxCharsPerLine), x + 50, lineY, 2);
+        lineY += 18;
       }
     }
   }
@@ -293,10 +318,11 @@ class WordleManager {
       }
     }
     
-    const scale = 1;
+    const scale = 2;
     const textWidth = getTextWidth(message, scale);
-    const x = Math.floor((526 - textWidth) / 2);
-    drawText(canvas, message, x, 88, scale);
+    // const x = Math.floor((526 - textWidth) / 2);
+    const x = 10;
+    drawText(canvas, message, x, 85, scale);
   }
 
   deleteGame(userId: string): void {
